@@ -1,0 +1,30 @@
+name: superflore-ci
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: ['*']
+
+jobs:
+  ci:
+      name: superflore tests
+      runs-on: ubuntu-18.04
+
+      steps:
+      - uses: actions/checkout@v2
+      - name: Set up dependencies
+        run: |
+          echo "deb http://packages.ros.org/ros/ubuntu $(lsb_release -sc) main" | sudo tee -a /etc/apt/sources.list.d/ros-latest.list
+          sudo apt-key adv --keyserver hkp://ha.pool.sks-keyservers.net:80 --recv-key C1CF6E31E6BADE8868B172B4F42ED6FBAB17C654
+          sudo apt-get update -qq
+          sudo apt-get install -y dpkg
+          sudo apt-get install -y python-rosdep
+          pip3 install -r requirements.txt
+
+      - name: Run tests
+        run: |
+          sudo rosdep init
+          rosdep update
+          python3 -m nose --exclude test_pull --exclude test_run --exclude test_logger_output
+          python3 -m flake8 superflore --import-order-style=google
